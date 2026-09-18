@@ -66,8 +66,11 @@ jobs:
             PLATFORM="linux/amd64,linux/arm64" \
             PUSH=true
 
-      - name: Tag latest
+      - name: Tag latest (final releases only)
         run: |
+          case "${{ steps.meta.outputs.tag }}" in
+            *-*) echo "Prerelease ${{ steps.meta.outputs.tag }} — not moving :latest"; exit 0 ;;
+          esac
           ref="${REGISTRY}/${{ steps.meta.outputs.owner }}/omni_exporter"
           docker buildx imagetools create \
             --tag "${ref}:latest" \
