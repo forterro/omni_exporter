@@ -10,7 +10,7 @@ image:
   registry: ghcr.io
   # Image path under the registry. The release workflow rewrites the org part
   # to the publishing owner, so forks republish under their own namespace.
-  repository: forterro/omni_exporter
+  repository: siderolabs/omni_exporter
   # Overrides the image tag. Defaults to the chart appVersion when empty.
   tag: ""
   pullPolicy: IfNotPresent
@@ -142,7 +142,7 @@ dashboards:
   # Namespace the Grafana sidecar watches; defaults to the release namespace.
   namespace: ""
   # Folder the sidecar files the dashboard under.
-  targetDirectory: /tmp/dashboards/Infrastructure/Omni
+  targetDirectory: /tmp/dashboards/Omni
   labels: {}
   annotations: {}
 

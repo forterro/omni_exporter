@@ -13,13 +13,9 @@ version: 0.1.0
 # published container image tag (which follows the upstream vX.Y.Z scheme).
 appVersion: "v0.1.0"
 
-home: https://github.com/forterro/omni_exporter
+home: https://github.com/siderolabs/omni_exporter
 sources:
-  - https://github.com/forterro/omni_exporter
   - https://github.com/siderolabs/omni_exporter
-
-maintainers:
-  - name: Forterro IT Operations
 
 keywords:
   - prometheus
