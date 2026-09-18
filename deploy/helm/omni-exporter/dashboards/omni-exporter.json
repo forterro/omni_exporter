@@ -1,0 +1,235 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Sidero Omni state exported by omni_exporter (kube-state-metrics for Omni): clusters, machines, machine sets, upgrades, etcd backups and exporter self-health.",
+  "editable": true,
+  "graphTooltip": 1,
+  "tags": ["omni", "siderolabs", "talos", "omni_exporter"],
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "label": "Data source",
+        "type": "datasource",
+        "query": "prometheus",
+        "refresh": 1,
+        "hide": 0,
+        "current": {},
+        "regex": ""
+      },
+      {
+        "name": "cluster_id",
+        "label": "Cluster",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "query": { "query": "label_values(omni_exporter_cluster_info, cluster_id)", "refId": "A" },
+        "refresh": 2,
+        "sort": 1,
+        "includeAll": true,
+        "multi": true,
+        "allValue": ".*",
+        "current": { "text": "All", "value": "$__all" }
+      }
+    ]
+  },
+  "time": { "from": "now-6h", "to": "now" },
+  "refresh": "1m",
+  "schemaVersion": 39,
+  "version": 1,
+  "panels": [
+    {
+      "id": 1,
+      "title": "Omni up",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] }
+        }
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false } },
+      "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "omni_exporter_up", "instant": true } ]
+    },
+    {
+      "id": 2,
+      "title": "Reachable",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "NO", "color": "red" }, "1": { "text": "YES", "color": "green" } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] }
+        }
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false } },
+      "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "omni_exporter_reachable", "instant": true } ]
+    },
+    {
+      "id": 3,
+      "title": "Clusters",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 0 },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false } },
+      "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "count(omni_exporter_cluster_ready{cluster_id=~\"$cluster_id\"})", "instant": true } ]
+    },
+    {
+      "id": 4,
+      "title": "Machines",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 0 },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false } },
+      "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "count(omni_exporter_machine_connected)", "instant": true } ]
+    },
+    {
+      "id": 5,
+      "title": "Machines connected",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 0 },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false } },
+      "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum(omni_exporter_machine_connected)", "instant": true } ]
+    },
+    {
+      "id": 6,
+      "title": "Machines disconnected",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 0 },
+      "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] } } },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false } },
+      "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "count(omni_exporter_machine_connected) - sum(omni_exporter_machine_connected)", "instant": true } ]
+    },
+    {
+      "id": 7,
+      "title": "Cluster readiness",
+      "type": "state-timeline",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "Not ready", "color": "red" }, "1": { "text": "Ready", "color": "green" } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] }
+        }
+      },
+      "options": { "mergeValues": true, "showValue": "never", "rowHeight": 0.9 },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "omni_exporter_cluster_ready{cluster_id=~\"$cluster_id\"}", "legendFormat": "ready · {{cluster_id}}" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "omni_exporter_cluster_available{cluster_id=~\"$cluster_id\"}", "legendFormat": "available · {{cluster_id}}" },
+        { "refId": "C", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "omni_exporter_cluster_kubernetes_api_ready{cluster_id=~\"$cluster_id\"}", "legendFormat": "k8s-api · {{cluster_id}}" },
+        { "refId": "D", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "omni_exporter_cluster_control_plane_ready{cluster_id=~\"$cluster_id\"}", "legendFormat": "control-plane · {{cluster_id}}" }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Cluster machines (total / healthy / connected)",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "lineInterpolation": "stepAfter", "fillOpacity": 10 } } },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "omni_exporter_cluster_machines{cluster_id=~\"$cluster_id\"}", "legendFormat": "total · {{cluster_id}}" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "omni_exporter_cluster_machines_healthy{cluster_id=~\"$cluster_id\"}", "legendFormat": "healthy · {{cluster_id}}" },
+        { "refId": "C", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "omni_exporter_cluster_machines_connected{cluster_id=~\"$cluster_id\"}", "legendFormat": "connected · {{cluster_id}}" }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Machines by stage",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 12 },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "bars", "stacking": { "mode": "normal" }, "fillOpacity": 60 } } },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum by (stage) (omni_exporter_cluster_machine_stage{cluster_id=~\"$cluster_id\"})", "legendFormat": "{{stage}}" }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Machine power state",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 12 },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "bars", "stacking": { "mode": "normal" }, "fillOpacity": 60 } } },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum by (state) (omni_exporter_machine_power_state)", "legendFormat": "{{state}}" }
+      ]
+    },
+    {
+      "id": 11,
+      "title": "Etcd backup age (since last success)",
+      "type": "table",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 12 },
+      "fieldConfig": {
+        "defaults": { "unit": "s", "custom": { "align": "auto" } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "cluster_id" }, "properties": [ { "id": "custom.width", "value": 260 } ] }
+        ]
+      },
+      "options": { "showHeader": true },
+      "transformations": [
+        { "id": "organize", "options": { "excludeByName": { "Time": true, "__name__": true, "job": true, "instance": true }, "renameByName": { "Value": "age" } } }
+      ],
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "time() - omni_exporter_cluster_etcd_backup_last_success_timestamp_seconds{cluster_id=~\"$cluster_id\"}", "instant": true, "format": "table" }
+      ]
+    },
+    {
+      "id": 12,
+      "title": "Collector success",
+      "type": "state-timeline",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "Failing", "color": "red" }, "1": { "text": "OK", "color": "green" } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] }
+        }
+      },
+      "options": { "mergeValues": true, "showValue": "never", "rowHeight": 0.9 },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "omni_exporter_collector_success", "legendFormat": "{{collector}}" }
+      ]
+    },
+    {
+      "id": 13,
+      "title": "Collector watch re-sync rate (10m)",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 20 },
+      "description": "A sustained rate above zero means a collector keeps re-synchronizing (a watch that fails to resume).",
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10 } } },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "rate(omni_exporter_collector_watch_attempts_total[10m])", "legendFormat": "{{collector}}" }
+      ]
+    }
+  ]
+}

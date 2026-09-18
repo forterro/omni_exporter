@@ -1,0 +1,25 @@
+{{- if .Values.dashboards.enabled }}
+{{- $root := . }}
+{{- range $path, $_ := .Files.Glob "dashboards/*.json" }}
+{{- $name := $path | base | trimSuffix ".json" }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ printf "%s-dashboard-%s" (include "omni-exporter.fullname" $root) ($name | lower | replace "_" "-") | trunc 63 | trimSuffix "-" }}
+  namespace: {{ $root.Values.dashboards.namespace | default $root.Release.Namespace }}
+  labels:
+    {{- include "omni-exporter.labels" $root | nindent 4 }}
+    grafana_dashboard: "1"
+    {{- with $root.Values.dashboards.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  annotations:
+    k8s-sidecar-target-directory: {{ $root.Values.dashboards.targetDirectory | quote }}
+    {{- with $root.Values.dashboards.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+data:
+  {{ $name }}.json: {{ $root.Files.Get $path | quote }}
+{{- end }}
+{{- end }}

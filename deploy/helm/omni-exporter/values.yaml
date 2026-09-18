@@ -128,6 +128,17 @@ readinessProbe:
   periodSeconds: 15
   timeoutSeconds: 5
 
+# Grafana dashboard shipped as a ConfigMap discovered by the Grafana sidecar
+# (label grafana_dashboard: "1"). No-op on clusters without that sidecar.
+dashboards:
+  enabled: false
+  # Namespace the Grafana sidecar watches; defaults to the release namespace.
+  namespace: ""
+  # Folder the sidecar files the dashboard under.
+  targetDirectory: /tmp/dashboards/Infrastructure/Omni
+  labels: {}
+  annotations: {}
+
 podAnnotations: {}
 podLabels: {}
 
