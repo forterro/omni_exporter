@@ -1,0 +1,21 @@
+omni-exporter {{ .Chart.AppVersion }} deployed as {{ include "omni-exporter.fullname" . }}.
+
+Scrape endpoint (ClusterIP):
+  {{ include "omni-exporter.fullname" . }}.{{ .Release.Namespace }}.svc:{{ .Values.service.port }}/metrics
+
+Check it from inside the cluster:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "omni-exporter.fullname" . }} {{ .Values.service.port }}:{{ .Values.service.port }}
+  curl -s localhost:{{ .Values.service.port }}/metrics | grep '^omni_exporter_up'
+
+{{- if not .Values.serviceMonitor.enabled }}
+
+No ServiceMonitor was created. Enable it with --set serviceMonitor.enabled=true
+if you run the Prometheus Operator, or scrape the Service directly.
+{{- end }}
+
+{{- if .Values.omni.serviceAccountKey.value }}
+
+WARNING: an inline omni.serviceAccountKey.value was supplied and stored in a
+Secret managed by this release. Prefer omni.serviceAccountKey.existingSecret
+for GitOps so the key never lands in values files or chart history.
+{{- end }}

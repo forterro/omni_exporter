@@ -1,0 +1,55 @@
+# Lint and render the Helm chart on every change to it, so the packaged chart
+# is always known-good before a release tag is cut. Additive to the upstream
+# KRES-generated pipeline (ci.yaml), which is left untouched.
+name: Chart CI
+
+on:
+  pull_request:
+    paths:
+      - 'deploy/helm/**'
+      - '.github/workflows/chart-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'deploy/helm/**'
+      - '.github/workflows/chart-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  helm:
+    name: Helm chart (lint + render)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/setup-helm@v4
+
+      - name: Lint
+        run: |
+          helm lint deploy/helm/omni-exporter \
+            --set omni.endpoint=https://example.omni.siderolabs.io \
+            --set omni.serviceAccountKey.value=dummy
+
+      - name: Render defaults (inline key)
+        run: |
+          helm template ci deploy/helm/omni-exporter \
+            --set omni.endpoint=https://example.omni.siderolabs.io \
+            --set omni.serviceAccountKey.value=dummy \
+            > rendered-default.yaml
+
+      - name: Render full (existingSecret + ServiceMonitor + webConfig)
+        run: |
+          helm template ci deploy/helm/omni-exporter \
+            --set omni.endpoint=https://example.omni.siderolabs.io \
+            --set omni.serviceAccountKey.existingSecret=omni-key \
+            --set serviceMonitor.enabled=true \
+            --set webConfig.enabled=true \
+            --set 'webConfig.content=tls_server_config: {}' \
+            > rendered-full.yaml
+
+      - name: Validate rendered manifests (kubeconform)
+        uses: docker://ghcr.io/yannh/kubeconform:latest
+        with:
+          args: -strict -ignore-missing-schemas -summary rendered-default.yaml rendered-full.yaml
