@@ -1,23 +1,14 @@
 {
   "uid": "omni-exporter",
   "title": "Omni Exporter",
-  "annotations": {
-    "list": [
-      {
-        "builtIn": 1,
-        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
-        "enable": true,
-        "hide": true,
-        "iconColor": "rgba(0, 211, 255, 1)",
-        "name": "Annotations & Alerts",
-        "type": "dashboard"
-      }
-    ]
-  },
-  "description": "Sidero Omni state exported by omni_exporter (kube-state-metrics for Omni): clusters, machines, machine sets, upgrades, etcd backups and exporter self-health.",
+  "description": "Sidero Omni state exported by omni_exporter (kube-state-metrics for Omni). Multi-instance: pick one or more omni_instance (tenants) sharing a single datasource.",
   "editable": true,
-  "graphTooltip": 1,
+  "graphTooltip": 0,
   "tags": ["omni", "siderolabs", "talos", "omni_exporter"],
+  "refresh": "1m",
+  "schemaVersion": 39,
+  "version": 1,
+  "time": { "from": "now-6h", "to": "now" },
   "templating": {
     "list": [
       {
@@ -26,16 +17,28 @@
         "type": "datasource",
         "query": "prometheus",
         "refresh": 1,
-        "hide": 0,
         "current": {},
-        "regex": ""
+        "hide": 0
+      },
+      {
+        "name": "omni_instance",
+        "label": "Omni instance",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "query": { "query": "label_values(omni_exporter_up, omni_instance)", "refId": "A" },
+        "refresh": 2,
+        "sort": 1,
+        "includeAll": true,
+        "multi": true,
+        "allValue": ".*",
+        "current": { "text": "All", "value": "$__all" }
       },
       {
         "name": "cluster_id",
         "label": "Cluster",
         "type": "query",
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
-        "query": { "query": "label_values(omni_exporter_cluster_info, cluster_id)", "refId": "A" },
+        "query": { "query": "label_values(omni_exporter_cluster_ready{omni_instance=~\"$omni_instance\"}, cluster_id)", "refId": "A" },
         "refresh": 2,
         "sort": 1,
         "includeAll": true,
@@ -45,192 +48,230 @@
       }
     ]
   },
-  "time": { "from": "now-6h", "to": "now" },
-  "refresh": "1m",
-  "schemaVersion": 39,
-  "version": 1,
   "panels": [
+    { "id": 100, "type": "row", "title": "Fleet", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }, "collapsed": false },
     {
       "id": 1,
-      "title": "Omni up",
-      "type": "stat",
+      "title": "Omni instances",
+      "type": "table",
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 0 },
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 1 },
+      "options": { "showHeader": true, "cellHeight": "sm" },
       "fieldConfig": {
-        "defaults": {
-          "mappings": [
-            { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }
-          ],
-          "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] }
-        }
+        "defaults": { "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "filterable": true } },
+        "overrides": [
+          { "matcher": { "id": "byRegexp", "options": "up|reachable" }, "properties": [
+            { "id": "custom.cellOptions", "value": { "type": "color-background", "mode": "basic" } },
+            { "id": "custom.align", "value": "center" }, { "id": "custom.width", "value": 110 },
+            { "id": "mappings", "value": [ { "type": "value", "options": { "0": { "text": "DOWN", "color": "red", "index": 0 }, "1": { "text": "UP", "color": "green", "index": 1 } } } ] },
+            { "id": "thresholds", "value": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] } }
+          ] }
+        ]
       },
-      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false } },
-      "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "omni_exporter_up", "instant": true } ]
+      "transformations": [
+        { "id": "merge", "options": {} },
+        { "id": "organize", "options": { "excludeByName": { "Time": true }, "renameByName": { "omni_instance": "instance", "Value #A": "up", "Value #B": "reachable", "Value #C": "clusters", "Value #D": "machines", "Value #E": "connected" }, "indexByName": { "omni_instance": 0, "Value #A": 1, "Value #B": 2, "Value #C": 3, "Value #D": 4, "Value #E": 5 } } }
+      ],
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "format": "table", "instant": true, "expr": "max by (omni_instance) (omni_exporter_up{omni_instance=~\"$omni_instance\"})" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "format": "table", "instant": true, "expr": "max by (omni_instance) (omni_exporter_reachable{omni_instance=~\"$omni_instance\"})" },
+        { "refId": "C", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "format": "table", "instant": true, "expr": "count by (omni_instance) (omni_exporter_cluster_ready{omni_instance=~\"$omni_instance\"})" },
+        { "refId": "D", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "format": "table", "instant": true, "expr": "count by (omni_instance) (omni_exporter_machine_connected{omni_instance=~\"$omni_instance\"})" },
+        { "refId": "E", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "format": "table", "instant": true, "expr": "sum by (omni_instance) (omni_exporter_machine_connected{omni_instance=~\"$omni_instance\"})" }
+      ]
     },
+    { "id": 101, "type": "row", "title": "Clusters", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 7 }, "collapsed": false },
     {
       "id": 2,
-      "title": "Reachable",
-      "type": "stat",
+      "title": "Clusters",
+      "type": "table",
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 0 },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 8 },
+      "options": { "showHeader": true, "cellHeight": "sm" },
       "fieldConfig": {
-        "defaults": {
-          "mappings": [
-            { "type": "value", "options": { "0": { "text": "NO", "color": "red" }, "1": { "text": "YES", "color": "green" } } }
-          ],
-          "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] }
-        }
+        "defaults": { "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "filterable": true } },
+        "overrides": [
+          { "matcher": { "id": "byRegexp", "options": "ready|available|k8s-api|ctrl-plane" }, "properties": [
+            { "id": "custom.cellOptions", "value": { "type": "color-background", "mode": "basic" } },
+            { "id": "custom.align", "value": "center" }, { "id": "custom.width", "value": 100 },
+            { "id": "mappings", "value": [ { "type": "value", "options": { "0": { "text": "✗", "color": "red", "index": 0 }, "1": { "text": "✓", "color": "green", "index": 1 } } } ] },
+            { "id": "thresholds", "value": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] } }
+          ] },
+          { "matcher": { "id": "byName", "options": "healthy" }, "properties": [ { "id": "custom.cellOptions", "value": { "type": "color-text" } }, { "id": "thresholds", "value": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] } } ] }
+        ]
       },
-      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false } },
-      "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "omni_exporter_reachable", "instant": true } ]
+      "transformations": [
+        { "id": "merge", "options": {} },
+        { "id": "organize", "options": { "excludeByName": { "Time": true, "Value #H": true, "Value #I": true }, "renameByName": { "omni_instance": "instance", "cluster_id": "cluster", "phase": "phase", "talos_version": "talos", "kubernetes_version": "k8s", "Value #A": "ready", "Value #B": "available", "Value #C": "k8s-api", "Value #D": "ctrl-plane", "Value #E": "machines", "Value #F": "healthy", "Value #G": "connected" }, "indexByName": { "omni_instance": 0, "cluster_id": 1, "phase": 2, "Value #A": 3, "Value #B": 4, "Value #C": 5, "Value #D": 6, "Value #E": 7, "Value #F": 8, "Value #G": 9, "talos_version": 10, "kubernetes_version": 11 } } }
+      ],
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "format": "table", "instant": true, "expr": "max by (omni_instance, cluster_id) (omni_exporter_cluster_ready{omni_instance=~\"$omni_instance\", cluster_id=~\"$cluster_id\"})" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "format": "table", "instant": true, "expr": "max by (omni_instance, cluster_id) (omni_exporter_cluster_available{omni_instance=~\"$omni_instance\", cluster_id=~\"$cluster_id\"})" },
+        { "refId": "C", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "format": "table", "instant": true, "expr": "max by (omni_instance, cluster_id) (omni_exporter_cluster_kubernetes_api_ready{omni_instance=~\"$omni_instance\", cluster_id=~\"$cluster_id\"})" },
+        { "refId": "D", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "format": "table", "instant": true, "expr": "max by (omni_instance, cluster_id) (omni_exporter_cluster_control_plane_ready{omni_instance=~\"$omni_instance\", cluster_id=~\"$cluster_id\"})" },
+        { "refId": "E", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "format": "table", "instant": true, "expr": "max by (omni_instance, cluster_id) (omni_exporter_cluster_machines{omni_instance=~\"$omni_instance\", cluster_id=~\"$cluster_id\"})" },
+        { "refId": "F", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "format": "table", "instant": true, "expr": "max by (omni_instance, cluster_id) (omni_exporter_cluster_machines_healthy{omni_instance=~\"$omni_instance\", cluster_id=~\"$cluster_id\"})" },
+        { "refId": "G", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "format": "table", "instant": true, "expr": "max by (omni_instance, cluster_id) (omni_exporter_cluster_machines_connected{omni_instance=~\"$omni_instance\", cluster_id=~\"$cluster_id\"})" },
+        { "refId": "H", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "format": "table", "instant": true, "expr": "max by (omni_instance, cluster_id, phase) (omni_exporter_cluster_phase{omni_instance=~\"$omni_instance\", cluster_id=~\"$cluster_id\"} == 1)" },
+        { "refId": "I", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "format": "table", "instant": true, "expr": "max by (omni_instance, cluster_id, talos_version, kubernetes_version) (omni_exporter_cluster_info{omni_instance=~\"$omni_instance\", cluster_id=~\"$cluster_id\"})" }
+      ]
     },
+    { "id": 102, "type": "row", "title": "Machines", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 17 }, "collapsed": false },
     {
       "id": 3,
-      "title": "Clusters",
-      "type": "stat",
+      "title": "Machines",
+      "type": "table",
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 0 },
-      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false } },
-      "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "count(omni_exporter_cluster_ready{cluster_id=~\"$cluster_id\"})", "instant": true } ]
+      "gridPos": { "h": 10, "w": 16, "x": 0, "y": 18 },
+      "options": { "showHeader": true, "cellHeight": "sm" },
+      "fieldConfig": {
+        "defaults": { "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "filterable": true } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "connected" }, "properties": [
+            { "id": "custom.cellOptions", "value": { "type": "color-background", "mode": "basic" } },
+            { "id": "custom.align", "value": "center" }, { "id": "custom.width", "value": 110 },
+            { "id": "mappings", "value": [ { "type": "value", "options": { "0": { "text": "✗", "color": "red", "index": 0 }, "1": { "text": "✓", "color": "green", "index": 1 } } } ] },
+            { "id": "thresholds", "value": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] } }
+          ] }
+        ]
+      },
+      "transformations": [
+        { "id": "merge", "options": {} },
+        { "id": "organize", "options": { "excludeByName": { "Time": true, "Value #A": true, "machine_id": true, "management_address": true }, "renameByName": { "omni_instance": "instance", "cluster_id": "cluster", "talos_version": "talos", "Value #B": "connected", "stage": "stage" }, "indexByName": { "omni_instance": 0, "hostname": 1, "role": 2, "stage": 3, "cluster_id": 4, "platform": 5, "arch": 6, "talos_version": 7, "Value #B": 8 } } }
+      ],
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "format": "table", "instant": true, "expr": "max by (omni_instance, machine_id, cluster_id, role, hostname, platform, arch, talos_version) (omni_exporter_machine_info{omni_instance=~\"$omni_instance\", cluster_id=~\"$cluster_id\"})" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "format": "table", "instant": true, "expr": "max by (omni_instance, machine_id) (omni_exporter_machine_connected{omni_instance=~\"$omni_instance\"})" },
+        { "refId": "C", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "format": "table", "instant": true, "expr": "max by (omni_instance, machine_id, stage) (omni_exporter_cluster_machine_stage{omni_instance=~\"$omni_instance\", cluster_id=~\"$cluster_id\"} == 1)" }
+      ]
     },
     {
       "id": 4,
-      "title": "Machines",
-      "type": "stat",
+      "title": "Machines by stage",
+      "type": "timeseries",
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 0 },
-      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false } },
-      "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "count(omni_exporter_machine_connected)", "instant": true } ]
+      "gridPos": { "h": 5, "w": 8, "x": 16, "y": 18 },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "bars", "stacking": { "mode": "normal" }, "fillOpacity": 70, "lineWidth": 0 } } },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum by (omni_instance, stage) (omni_exporter_cluster_machine_stage{omni_instance=~\"$omni_instance\", cluster_id=~\"$cluster_id\"})", "legendFormat": "{{omni_instance}} · {{stage}}" } ]
     },
     {
       "id": 5,
-      "title": "Machines connected",
-      "type": "stat",
+      "title": "Machine power state",
+      "type": "timeseries",
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 0 },
-      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false } },
-      "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum(omni_exporter_machine_connected)", "instant": true } ]
+      "gridPos": { "h": 5, "w": 8, "x": 16, "y": 23 },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "bars", "stacking": { "mode": "normal" }, "fillOpacity": 70, "lineWidth": 0 } } },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum by (omni_instance, state) (omni_exporter_machine_power_state{omni_instance=~\"$omni_instance\"})", "legendFormat": "{{omni_instance}} · {{state}}" } ]
     },
+    { "id": 103, "type": "row", "title": "Machine sets", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 28 }, "collapsed": false },
     {
       "id": 6,
-      "title": "Machines disconnected",
-      "type": "stat",
+      "title": "Machine sets",
+      "type": "table",
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 0 },
-      "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] } } },
-      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false } },
-      "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "count(omni_exporter_machine_connected) - sum(omni_exporter_machine_connected)", "instant": true } ]
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 29 },
+      "options": { "showHeader": true, "cellHeight": "sm" },
+      "fieldConfig": {
+        "defaults": { "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "filterable": true } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "ready" }, "properties": [
+            { "id": "custom.cellOptions", "value": { "type": "color-background", "mode": "basic" } },
+            { "id": "custom.align", "value": "center" }, { "id": "custom.width", "value": 90 },
+            { "id": "mappings", "value": [ { "type": "value", "options": { "0": { "text": "✗", "color": "red", "index": 0 }, "1": { "text": "✓", "color": "green", "index": 1 } } } ] },
+            { "id": "thresholds", "value": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] } }
+          ] }
+        ]
+      },
+      "transformations": [
+        { "id": "merge", "options": {} },
+        { "id": "organize", "options": { "excludeByName": { "Time": true, "Value #A": true }, "renameByName": { "omni_instance": "instance", "cluster_id": "cluster", "machine_set_id": "machine set", "phase": "phase", "Value #B": "ready", "Value #C": "machines", "Value #D": "healthy", "Value #E": "connected" }, "indexByName": { "omni_instance": 0, "cluster_id": 1, "machine_set_id": 2, "phase": 3, "Value #B": 4, "Value #C": 5, "Value #D": 6, "Value #E": 7 } } }
+      ],
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "format": "table", "instant": true, "expr": "max by (omni_instance, cluster_id, machine_set_id, phase) (omni_exporter_machine_set_phase{omni_instance=~\"$omni_instance\", cluster_id=~\"$cluster_id\"} == 1)" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "format": "table", "instant": true, "expr": "max by (omni_instance, cluster_id, machine_set_id) (omni_exporter_machine_set_ready{omni_instance=~\"$omni_instance\", cluster_id=~\"$cluster_id\"})" },
+        { "refId": "C", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "format": "table", "instant": true, "expr": "max by (omni_instance, cluster_id, machine_set_id) (omni_exporter_machine_set_machines{omni_instance=~\"$omni_instance\", cluster_id=~\"$cluster_id\"})" },
+        { "refId": "D", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "format": "table", "instant": true, "expr": "max by (omni_instance, cluster_id, machine_set_id) (omni_exporter_machine_set_machines_healthy{omni_instance=~\"$omni_instance\", cluster_id=~\"$cluster_id\"})" },
+        { "refId": "E", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "format": "table", "instant": true, "expr": "max by (omni_instance, cluster_id, machine_set_id) (omni_exporter_machine_set_machines_connected{omni_instance=~\"$omni_instance\", cluster_id=~\"$cluster_id\"})" }
+      ]
     },
+    { "id": 104, "type": "row", "title": "Etcd backups", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 36 }, "collapsed": false },
     {
       "id": 7,
-      "title": "Cluster readiness",
-      "type": "state-timeline",
+      "title": "Etcd backups",
+      "type": "table",
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "gridPos": { "h": 7, "w": 18, "x": 0, "y": 37 },
+      "options": { "showHeader": true, "cellHeight": "sm" },
       "fieldConfig": {
-        "defaults": {
-          "mappings": [
-            { "type": "value", "options": { "0": { "text": "Not ready", "color": "red" }, "1": { "text": "Ready", "color": "green" } } }
-          ],
-          "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] }
-        }
+        "defaults": { "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "filterable": true } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "enabled" }, "properties": [
+            { "id": "custom.cellOptions", "value": { "type": "color-background", "mode": "basic" } },
+            { "id": "custom.align", "value": "center" }, { "id": "custom.width", "value": 100 },
+            { "id": "mappings", "value": [ { "type": "value", "options": { "0": { "text": "off", "color": "orange", "index": 0 }, "1": { "text": "on", "color": "green", "index": 1 } } } ] },
+            { "id": "thresholds", "value": { "mode": "absolute", "steps": [ { "color": "orange", "value": null }, { "color": "green", "value": 1 } ] } }
+          ] },
+          { "matcher": { "id": "byRegexp", "options": "age" }, "properties": [ { "id": "unit", "value": "s" } ] }
+        ]
       },
-      "options": { "mergeValues": true, "showValue": "never", "rowHeight": 0.9 },
+      "transformations": [
+        { "id": "merge", "options": {} },
+        { "id": "organize", "options": { "excludeByName": { "Time": true, "Value #B": true }, "renameByName": { "omni_instance": "instance", "cluster_id": "cluster", "status": "last status", "Value #A": "enabled", "Value #C": "last success age", "Value #D": "last attempt age" }, "indexByName": { "omni_instance": 0, "cluster_id": 1, "Value #A": 2, "status": 3, "Value #C": 4, "Value #D": 5 } } }
+      ],
       "targets": [
-        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "omni_exporter_cluster_ready{cluster_id=~\"$cluster_id\"}", "legendFormat": "ready · {{cluster_id}}" },
-        { "refId": "B", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "omni_exporter_cluster_available{cluster_id=~\"$cluster_id\"}", "legendFormat": "available · {{cluster_id}}" },
-        { "refId": "C", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "omni_exporter_cluster_kubernetes_api_ready{cluster_id=~\"$cluster_id\"}", "legendFormat": "k8s-api · {{cluster_id}}" },
-        { "refId": "D", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "omni_exporter_cluster_control_plane_ready{cluster_id=~\"$cluster_id\"}", "legendFormat": "control-plane · {{cluster_id}}" }
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "format": "table", "instant": true, "expr": "max by (omni_instance, cluster_id) (omni_exporter_cluster_etcd_backup_enabled{omni_instance=~\"$omni_instance\", cluster_id=~\"$cluster_id\"})" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "format": "table", "instant": true, "expr": "max by (omni_instance, cluster_id, status) (omni_exporter_cluster_etcd_backup_status{omni_instance=~\"$omni_instance\", cluster_id=~\"$cluster_id\"} == 1)" },
+        { "refId": "C", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "format": "table", "instant": true, "expr": "max by (omni_instance, cluster_id) (time() - omni_exporter_cluster_etcd_backup_last_success_timestamp_seconds{omni_instance=~\"$omni_instance\", cluster_id=~\"$cluster_id\"})" },
+        { "refId": "D", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "format": "table", "instant": true, "expr": "max by (omni_instance, cluster_id) (time() - omni_exporter_cluster_etcd_backup_last_attempt_timestamp_seconds{omni_instance=~\"$omni_instance\", cluster_id=~\"$cluster_id\"})" }
       ]
     },
     {
       "id": 8,
-      "title": "Cluster machines (total / healthy / connected)",
-      "type": "timeseries",
+      "title": "Backup store ready",
+      "type": "stat",
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
-      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "lineInterpolation": "stepAfter", "fillOpacity": 10 } } },
-      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"] }, "tooltip": { "mode": "multi" } },
-      "targets": [
-        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "omni_exporter_cluster_machines{cluster_id=~\"$cluster_id\"}", "legendFormat": "total · {{cluster_id}}" },
-        { "refId": "B", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "omni_exporter_cluster_machines_healthy{cluster_id=~\"$cluster_id\"}", "legendFormat": "healthy · {{cluster_id}}" },
-        { "refId": "C", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "omni_exporter_cluster_machines_connected{cluster_id=~\"$cluster_id\"}", "legendFormat": "connected · {{cluster_id}}" }
-      ]
-    },
-    {
-      "id": 9,
-      "title": "Machines by stage",
-      "type": "timeseries",
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 12 },
-      "fieldConfig": { "defaults": { "custom": { "drawStyle": "bars", "stacking": { "mode": "normal" }, "fillOpacity": 60 } } },
-      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
-      "targets": [
-        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum by (stage) (omni_exporter_cluster_machine_stage{cluster_id=~\"$cluster_id\"})", "legendFormat": "{{stage}}" }
-      ]
-    },
-    {
-      "id": 10,
-      "title": "Machine power state",
-      "type": "timeseries",
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 12 },
-      "fieldConfig": { "defaults": { "custom": { "drawStyle": "bars", "stacking": { "mode": "normal" }, "fillOpacity": 60 } } },
-      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
-      "targets": [
-        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "sum by (state) (omni_exporter_machine_power_state)", "legendFormat": "{{state}}" }
-      ]
-    },
-    {
-      "id": 11,
-      "title": "Etcd backup age (since last success)",
-      "type": "table",
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 12 },
-      "fieldConfig": {
-        "defaults": { "unit": "s", "custom": { "align": "auto" } },
-        "overrides": [
-          { "matcher": { "id": "byName", "options": "cluster_id" }, "properties": [ { "id": "custom.width", "value": 260 } ] }
-        ]
-      },
-      "options": { "showHeader": true },
-      "transformations": [
-        { "id": "organize", "options": { "excludeByName": { "Time": true, "__name__": true, "job": true, "instance": true }, "renameByName": { "Value": "age" } } }
-      ],
-      "targets": [
-        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "time() - omni_exporter_cluster_etcd_backup_last_success_timestamp_seconds{cluster_id=~\"$cluster_id\"}", "instant": true, "format": "table" }
-      ]
-    },
-    {
-      "id": 12,
-      "title": "Collector success",
-      "type": "state-timeline",
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
+      "gridPos": { "h": 7, "w": 6, "x": 18, "y": 37 },
       "fieldConfig": {
         "defaults": {
-          "mappings": [
-            { "type": "value", "options": { "0": { "text": "Failing", "color": "red" }, "1": { "text": "OK", "color": "green" } } }
-          ],
+          "mappings": [ { "type": "value", "options": { "0": { "text": "ERROR", "color": "red" }, "1": { "text": "OK", "color": "green" } } } ],
           "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] }
         }
       },
-      "options": { "mergeValues": true, "showValue": "never", "rowHeight": 0.9 },
-      "targets": [
-        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "omni_exporter_collector_success", "legendFormat": "{{collector}}" }
-      ]
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false } },
+      "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "min by (omni_instance) (omni_exporter_etcd_backup_store_ready{omni_instance=~\"$omni_instance\"})", "legendFormat": "{{omni_instance}}", "instant": true } ]
     },
+    { "id": 105, "type": "row", "title": "Exporter health", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 44 }, "collapsed": false },
     {
-      "id": 13,
-      "title": "Collector watch re-sync rate (10m)",
-      "type": "timeseries",
+      "id": 9,
+      "title": "Collectors",
+      "type": "table",
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 20 },
-      "description": "A sustained rate above zero means a collector keeps re-synchronizing (a watch that fails to resume).",
-      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10 } } },
-      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] }, "tooltip": { "mode": "multi" } },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 45 },
+      "options": { "showHeader": true, "cellHeight": "sm" },
+      "fieldConfig": {
+        "defaults": { "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "filterable": true } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "success" }, "properties": [
+            { "id": "custom.cellOptions", "value": { "type": "color-background", "mode": "basic" } },
+            { "id": "custom.align", "value": "center" }, { "id": "custom.width", "value": 100 },
+            { "id": "mappings", "value": [ { "type": "value", "options": { "0": { "text": "✗", "color": "red", "index": 0 }, "1": { "text": "✓", "color": "green", "index": 1 } } } ] },
+            { "id": "thresholds", "value": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] } }
+          ] },
+          { "matcher": { "id": "byName", "options": "last sync age" }, "properties": [ { "id": "unit", "value": "s" } ] },
+          { "matcher": { "id": "byName", "options": "resync/s" }, "properties": [ { "id": "unit", "value": "reqps" }, { "id": "custom.cellOptions", "value": { "type": "color-text" } }, { "id": "thresholds", "value": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 0.001 } ] } } ] }
+        ]
+      },
+      "transformations": [
+        { "id": "merge", "options": {} },
+        { "id": "organize", "options": { "excludeByName": { "Time": true }, "renameByName": { "omni_instance": "instance", "collector": "collector", "Value #A": "success", "Value #B": "cached", "Value #C": "last sync age", "Value #D": "resync/s" }, "indexByName": { "omni_instance": 0, "collector": 1, "Value #A": 2, "Value #B": 3, "Value #C": 4, "Value #D": 5 } } }
+      ],
       "targets": [
-        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "expr": "rate(omni_exporter_collector_watch_attempts_total[10m])", "legendFormat": "{{collector}}" }
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "format": "table", "instant": true, "expr": "max by (omni_instance, collector) (omni_exporter_collector_success{omni_instance=~\"$omni_instance\"})" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "format": "table", "instant": true, "expr": "max by (omni_instance, collector) (omni_exporter_collector_cached_resources{omni_instance=~\"$omni_instance\"})" },
+        { "refId": "C", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "format": "table", "instant": true, "expr": "max by (omni_instance, collector) (time() - omni_exporter_collector_last_sync_timestamp_seconds{omni_instance=~\"$omni_instance\"})" },
+        { "refId": "D", "datasource": { "type": "prometheus", "uid": "${datasource}" }, "format": "table", "instant": true, "expr": "sum by (omni_instance, collector) (rate(omni_exporter_collector_watch_attempts_total{omni_instance=~\"$omni_instance\"}[10m]))" }
       ]
     }
   ]

@@ -26,6 +26,11 @@ containerPort: 10048
 omni:
   # Omni API endpoint, e.g. https://<account>.omni.siderolabs.io (required).
   endpoint: ""
+  # Identifies this exporter when several exporters (e.g. one per Omni tenant)
+  # feed a single Prometheus/Mimir. When set, the ServiceMonitor tags every
+  # scraped series with <serviceMonitor.instanceLabel>=<value>. Leave empty for
+  # a single exporter.
+  instance: ""
   # Skip TLS verification against the Omni API. Leave false in production.
   insecureSkipTLSVerify: false
   # Reader-role service account key. Provide EITHER an existing secret
@@ -71,6 +76,8 @@ serviceMonitor:
   interval: 30s
   scrapeTimeout: 10s
   honorLabels: false
+  # Label name carrying omni.instance (multi-tenant discriminator).
+  instanceLabel: omni_instance
   # Extra labels (e.g. to match your Prometheus serviceMonitorSelector).
   labels: {}
   annotations: {}
