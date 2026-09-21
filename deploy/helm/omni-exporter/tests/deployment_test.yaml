@@ -1,0 +1,35 @@
+suite: deployment
+templates:
+  - templates/deployment.yaml
+set:
+  omni.endpoint: https://example.omni.siderolabs.io
+  omni.serviceAccountKey.value: dummy
+tests:
+  - it: renders a Deployment listening on the metrics port
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 10048
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].name
+          value: metrics
+  - it: wires the Omni endpoint and key
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: OMNI_ENDPOINT
+            value: https://example.omni.siderolabs.io
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: --web.listen-address=:10048
+  - it: is hardened by default
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.readOnlyRootFilesystem
+          value: true
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: true

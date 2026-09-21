@@ -1,0 +1,22 @@
+# grafana/dashboard-linter configuration.
+# omni_exporter metrics deliberately carry NO `job` / `instance` labels — they use
+# cluster_id / machine_id / machine_set_id to avoid clashing with the target labels
+# a scrape config attaches (see the exporter README "Caveats"). The job/instance
+# rules therefore do not apply. The counter watch-rate uses a fixed 10m window as
+# recommended by the exporter README. Descriptions/units mirror the upstream
+# dashboard (hack/compose) and can be added incrementally.
+exclusions:
+  template-job-rule:
+    reason: exporter metrics have no `job` label by design.
+  template-instance-rule:
+    reason: exporter metrics have no `instance` label by design.
+  target-job-rule:
+    reason: exporter metrics have no `job` label by design.
+  target-instance-rule:
+    reason: exporter metrics have no `instance` label by design.
+  target-rate-interval-rule:
+    reason: watch re-sync rate intentionally uses a fixed 10m window (exporter README).
+  panel-title-description-rule:
+    reason: inherited from the upstream dashboard; descriptions added incrementally.
+  panel-units-rule:
+    reason: many panels are enum-state / table / info panels where a unit is not meaningful.

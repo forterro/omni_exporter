@@ -1,0 +1,17 @@
+# Values used by the kres-generated `helm template` lint in CI so that every
+# optional path (ServiceMonitor, dashboard, PrometheusRule, web config) renders.
+omni:
+  endpoint: https://example.omni.siderolabs.io
+  instance: example
+  serviceAccountKey:
+    value: dummy-service-account-key
+serviceMonitor:
+  enabled: true
+dashboards:
+  enabled: true
+prometheusRule:
+  enabled: true
+webConfig:
+  enabled: true
+  content: |
+    tls_server_config: {}

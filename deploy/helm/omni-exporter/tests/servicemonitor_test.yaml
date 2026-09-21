@@ -1,0 +1,24 @@
+suite: servicemonitor
+templates:
+  - templates/servicemonitor.yaml
+set:
+  omni.endpoint: https://example.omni.siderolabs.io
+  omni.serviceAccountKey.value: dummy
+tests:
+  - it: is not rendered by default
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: tags every series with omni_instance when set
+    set:
+      serviceMonitor.enabled: true
+      omni.instance: forterro
+    asserts:
+      - isKind:
+          of: ServiceMonitor
+      - contains:
+          path: spec.endpoints[0].relabelings
+          content:
+            action: replace
+            targetLabel: omni_instance
+            replacement: forterro

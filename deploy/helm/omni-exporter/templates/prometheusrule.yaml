@@ -1,0 +1,42 @@
+{{- if .Values.prometheusRule.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "omni-exporter.fullname" . }}
+  {{- with .Values.prometheusRule.namespace }}
+  namespace: {{ . }}
+  {{- end }}
+  labels:
+    {{- include "omni-exporter.labels" . | nindent 4 }}
+    {{- with .Values.prometheusRule.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: omni-exporter
+      rules:
+        - alert: OmniExporterDown
+          expr: omni_exporter_up == 0
+          for: {{ .Values.prometheusRule.forDown }}
+          labels:
+            severity: warning
+          annotations:
+            summary: "Omni exporter down or Omni unreachable ({{ "{{ $labels.omni_instance }}" }})"
+            description: "omni_exporter_up has been 0 for more than {{ .Values.prometheusRule.forDown }} — object metrics are suppressed."
+        - alert: OmniCollectorResyncing
+          expr: rate(omni_exporter_collector_watch_attempts_total[10m]) > 0
+          for: {{ .Values.prometheusRule.forResync }}
+          labels:
+            severity: warning
+          annotations:
+            summary: "Omni exporter collector keeps re-syncing ({{ "{{ $labels.collector }}" }} on {{ "{{ $labels.omni_instance }}" }})"
+            description: "A collector watch keeps failing to resume; the served view may be stale."
+        - alert: OmniClusterNotReady
+          expr: omni_exporter_up == 1 and omni_exporter_cluster_ready == 0
+          for: {{ .Values.prometheusRule.forClusterNotReady }}
+          labels:
+            severity: warning
+          annotations:
+            summary: "Omni cluster not ready ({{ "{{ $labels.cluster_id }}" }} on {{ "{{ $labels.omni_instance }}" }})"
+            description: "cluster_ready has been 0 while the exporter is up and reachable."
+{{- end }}

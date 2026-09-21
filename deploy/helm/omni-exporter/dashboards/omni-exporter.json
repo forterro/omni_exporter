@@ -3,7 +3,9 @@
   "uid": "omni-exporter",
   "tags": [
     "omni",
-    "omni_exporter"
+    "omni_exporter",
+    "siderolabs",
+    "talos"
   ],
   "timezone": "browser",
   "schemaVersion": 39,
@@ -13,7 +15,7 @@
     "from": "now-30m",
     "to": "now"
   },
-  "editable": true,
+  "editable": false,
   "panels": [
     {
       "id": 1,
@@ -29,334 +31,357 @@
       "panels": []
     },
     {
-      "id": 2,
-      "type": "stat",
-      "title": "Exporter",
+      "id": 900,
+      "type": "table",
+      "title": "Fleet",
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "gridPos": {
+        "h": 7,
+        "w": 24,
         "x": 0,
-        "y": 1,
-        "w": 3,
-        "h": 4
+        "y": 1
       },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "omni_exporter_up",
-          "refId": "A"
-        }
-      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "up"
+            },
+            "properties": [
               {
-                "color": "text",
-                "value": null
-              }
-            ]
-          },
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "Down",
-                  "color": "red",
-                  "index": 0
-                },
-                "1": {
-                  "text": "Live",
-                  "color": "green",
-                  "index": 1
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "basic"
+                }
+              },
+              {
+                "id": "custom.align",
+                "value": "center"
+              },
+              {
+                "id": "custom.width",
+                "value": 80
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "DOWN",
+                        "color": "red",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "UP",
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red",
+                      "value": null
+                    },
+                    {
+                      "color": "green",
+                      "value": 1
+                    }
+                  ]
                 }
               }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "reachable"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "basic"
+                }
+              },
+              {
+                "id": "custom.align",
+                "value": "center"
+              },
+              {
+                "id": "custom.width",
+                "value": 90
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "NO",
+                        "color": "red",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "YES",
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red",
+                      "value": null
+                    },
+                    {
+                      "color": "green",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "store ready"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "basic"
+                }
+              },
+              {
+                "id": "custom.align",
+                "value": "center"
+              },
+              {
+                "id": "custom.width",
+                "value": 100
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "ERROR",
+                        "color": "red",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "OK",
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red",
+                      "value": null
+                    },
+                    {
+                      "color": "green",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value #G": true,
+              "Value #H": true
+            },
+            "renameByName": {
+              "omni_instance": "instance",
+              "version": "version",
+              "Value #A": "up",
+              "Value #B": "reachable",
+              "Value #C": "clusters",
+              "Value #D": "ready",
+              "Value #E": "machines",
+              "Value #F": "connected",
+              "configuration_name": "backup store",
+              "Value #I": "backups",
+              "Value #J": "store ready"
+            },
+            "indexByName": {
+              "omni_instance": 0,
+              "Value #A": 1,
+              "Value #B": 2,
+              "version": 3,
+              "Value #C": 4,
+              "Value #D": 5,
+              "Value #E": 6,
+              "Value #F": 7,
+              "configuration_name": 8,
+              "Value #I": 9,
+              "Value #J": 10
             }
-          ]
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "textMode": "value",
-        "colorMode": "value",
-        "graphMode": "none"
-      }
-    },
-    {
-      "id": 3,
-      "type": "stat",
-      "title": "Clusters",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "x": 3,
-        "y": 1,
-        "w": 3,
-        "h": 4
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "count(omni_exporter_cluster_ready) or on() clamp_max(omni_exporter_up == 1, 0)",
-          "refId": "A"
+          }
         }
       ],
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "textMode": "value",
-        "colorMode": "value",
-        "graphMode": "none"
-      }
-    },
-    {
-      "id": 4,
-      "type": "stat",
-      "title": "Clusters Ready",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "x": 8,
-        "y": 1,
-        "w": 4,
-        "h": 4
-      },
       "targets": [
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "sum(omni_exporter_cluster_ready) or on() clamp_max(omni_exporter_up == 1, 0)",
-          "refId": "A"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "textMode": "value",
-        "colorMode": "value",
-        "graphMode": "none"
-      }
-    },
-    {
-      "id": 5,
-      "type": "stat",
-      "title": "Machines",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "x": 12,
-        "y": 1,
-        "w": 4,
-        "h": 4
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "count(omni_exporter_machine_connected) or on() clamp_max(omni_exporter_up == 1, 0)",
-          "refId": "A"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "textMode": "value",
-        "colorMode": "value",
-        "graphMode": "none"
-      }
-    },
-    {
-      "id": 6,
-      "type": "stat",
-      "title": "Machines Connected",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "x": 16,
-        "y": 1,
-        "w": 4,
-        "h": 4
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "sum(omni_exporter_machine_connected) or on() clamp_max(omni_exporter_up == 1, 0)",
-          "refId": "A"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "textMode": "value",
-        "colorMode": "value",
-        "graphMode": "none"
-      }
-    },
-    {
-      "id": 7,
-      "type": "stat",
-      "title": "Backup Store",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "x": 20,
-        "y": 1,
-        "w": 4,
-        "h": 4
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "omni_exporter_etcd_backup_store_info == 1",
           "refId": "A",
-          "legendFormat": "{{configuration_name}}"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
           },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          }
+          "expr": "max by (omni_instance) (omni_exporter_up{omni_instance=~\"$omni_instance\"})",
+          "format": "table",
+          "instant": true
         },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max by (omni_instance) (omni_exporter_reachable{omni_instance=~\"$omni_instance\"})",
+          "format": "table",
+          "instant": true
         },
-        "textMode": "name",
-        "colorMode": "value",
-        "graphMode": "none"
-      }
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count by (omni_instance) (omni_exporter_cluster_ready{omni_instance=~\"$omni_instance\"})",
+          "format": "table",
+          "instant": true
+        },
+        {
+          "refId": "D",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by (omni_instance) (omni_exporter_cluster_ready{omni_instance=~\"$omni_instance\"})",
+          "format": "table",
+          "instant": true
+        },
+        {
+          "refId": "E",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count by (omni_instance) (omni_exporter_machine_connected{omni_instance=~\"$omni_instance\"})",
+          "format": "table",
+          "instant": true
+        },
+        {
+          "refId": "F",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by (omni_instance) (omni_exporter_machine_connected{omni_instance=~\"$omni_instance\"})",
+          "format": "table",
+          "instant": true
+        },
+        {
+          "refId": "G",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max by (omni_instance, configuration_name) (omni_exporter_etcd_backup_store_info{omni_instance=~\"$omni_instance\"} == 1)",
+          "format": "table",
+          "instant": true
+        },
+        {
+          "refId": "H",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max by (omni_instance, version) (omni_exporter_build_info{omni_instance=~\"$omni_instance\"})",
+          "format": "table",
+          "instant": true
+        },
+        {
+          "refId": "I",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by (omni_instance) (omni_exporter_cluster_etcd_backup_enabled{omni_instance=~\"$omni_instance\"})",
+          "format": "table",
+          "instant": true
+        },
+        {
+          "refId": "J",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max by (omni_instance) (omni_exporter_etcd_backup_store_ready{omni_instance=~\"$omni_instance\"})",
+          "format": "table",
+          "instant": true
+        }
+      ]
     },
     {
       "id": 8,
@@ -364,7 +389,7 @@
       "title": "Clusters",
       "gridPos": {
         "x": 0,
-        "y": 5,
+        "y": 7,
         "w": 24,
         "h": 1
       },
@@ -377,23 +402,23 @@
       "title": "Cluster Ready",
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "gridPos": {
         "x": 0,
-        "y": 6,
+        "y": 8,
         "w": 12,
         "h": 8
       },
       "targets": [
         {
+          "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "omni_exporter_cluster_ready",
-          "refId": "A",
-          "legendFormat": "{{cluster_id}}"
+          "expr": "omni_exporter_cluster_ready{omni_instance=~\"$omni_instance\"}",
+          "legendFormat": "{{omni_instance}} \u00b7 {{cluster_id}}"
         }
       ],
       "fieldConfig": {
@@ -446,23 +471,23 @@
       "title": "Clusters by Phase",
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "gridPos": {
         "x": 12,
-        "y": 6,
+        "y": 8,
         "w": 12,
         "h": 8
       },
       "targets": [
         {
+          "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "sum by (phase) (omni_exporter_cluster_phase)",
-          "refId": "A",
-          "legendFormat": "{{phase}}"
+          "expr": "sum by (omni_instance, phase) (omni_exporter_cluster_phase{omni_instance=~\"$omni_instance\"})",
+          "legendFormat": "{{omni_instance}} \u00b7 {{phase}}"
         }
       ],
       "fieldConfig": {
@@ -497,50 +522,50 @@
       "title": "Cluster Machines",
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "gridPos": {
         "x": 0,
-        "y": 14,
+        "y": 16,
         "w": 12,
         "h": 8
       },
       "targets": [
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "omni_exporter_cluster_machines",
           "refId": "A",
-          "legendFormat": "{{cluster_id}} total"
-        },
-        {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "omni_exporter_cluster_machines_healthy",
+          "expr": "omni_exporter_cluster_machines{omni_instance=~\"$omni_instance\"}",
+          "legendFormat": "{{omni_instance}} \u00b7 {{cluster_id}} total"
+        },
+        {
           "refId": "B",
-          "legendFormat": "{{cluster_id}} healthy"
-        },
-        {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "omni_exporter_cluster_machines_connected",
+          "expr": "omni_exporter_cluster_machines_healthy{omni_instance=~\"$omni_instance\"}",
+          "legendFormat": "{{omni_instance}} \u00b7 {{cluster_id}} healthy"
+        },
+        {
           "refId": "C",
-          "legendFormat": "{{cluster_id}} connected"
-        },
-        {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "omni_exporter_cluster_machines_requested",
+          "expr": "omni_exporter_cluster_machines_connected{omni_instance=~\"$omni_instance\"}",
+          "legendFormat": "{{omni_instance}} \u00b7 {{cluster_id}} connected"
+        },
+        {
           "refId": "D",
-          "legendFormat": "{{cluster_id}} requested"
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "omni_exporter_cluster_machines_requested{omni_instance=~\"$omni_instance\"}",
+          "legendFormat": "{{omni_instance}} \u00b7 {{cluster_id}} requested"
         }
       ],
       "fieldConfig": {
@@ -575,41 +600,41 @@
       "title": "Cluster Health Signals",
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "gridPos": {
         "x": 12,
-        "y": 14,
+        "y": 16,
         "w": 12,
         "h": 8
       },
       "targets": [
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "omni_exporter_cluster_available",
           "refId": "A",
-          "legendFormat": "{{cluster_id}} available"
-        },
-        {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "omni_exporter_cluster_kubernetes_api_ready",
+          "expr": "omni_exporter_cluster_available{omni_instance=~\"$omni_instance\"}",
+          "legendFormat": "{{omni_instance}} \u00b7 {{cluster_id}} available"
+        },
+        {
           "refId": "B",
-          "legendFormat": "{{cluster_id}} kubernetes api"
-        },
-        {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "omni_exporter_cluster_control_plane_ready",
+          "expr": "omni_exporter_cluster_kubernetes_api_ready{omni_instance=~\"$omni_instance\"}",
+          "legendFormat": "{{omni_instance}} \u00b7 {{cluster_id}} kubernetes api"
+        },
+        {
           "refId": "C",
-          "legendFormat": "{{cluster_id}} control plane"
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "omni_exporter_cluster_control_plane_ready{omni_instance=~\"$omni_instance\"}",
+          "legendFormat": "{{omni_instance}} \u00b7 {{cluster_id}} control plane"
         }
       ],
       "fieldConfig": {
@@ -646,11 +671,11 @@
       "title": "Cluster Info",
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "gridPos": {
         "x": 0,
-        "y": 22,
+        "y": 24,
         "w": 12,
         "h": 7
       },
@@ -658,9 +683,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "omni_exporter_cluster_info",
+          "expr": "omni_exporter_cluster_info{omni_instance=~\"$omni_instance\"}",
           "refId": "A",
           "instant": true,
           "format": "table"
@@ -683,7 +708,16 @@
               "Value": true,
               "__name__": true,
               "instance": true,
-              "job": true
+              "job": true,
+              "__temp_job__": true,
+              "arch": true,
+              "cluster": true,
+              "container": true,
+              "endpoint": true,
+              "endpoints": true,
+              "namespace": true,
+              "pod": true,
+              "service": true
             },
             "renameByName": {}
           }
@@ -696,32 +730,32 @@
       "title": "Upgrades in Progress",
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "gridPos": {
         "x": 12,
-        "y": 22,
+        "y": 24,
         "w": 12,
         "h": 7
       },
       "targets": [
         {
+          "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "sum(omni_exporter_cluster_talos_upgrade_phase{phase=~\"upgrading|updating_machine_schematics|reverting\"}) or on() clamp_max(omni_exporter_up == 1, 0)",
-          "refId": "A",
-          "legendFormat": "talos"
+          "expr": "sum by (omni_instance) (omni_exporter_cluster_talos_upgrade_phase{omni_instance=~\"$omni_instance\",phase=~\"upgrading|updating_machine_schematics|reverting\"}) or (clamp_max(max by (omni_instance) (omni_exporter_up{omni_instance=~\"$omni_instance\"}) == 1, 0))",
+          "legendFormat": "{{omni_instance}} talos"
         },
         {
+          "refId": "B",
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "sum(omni_exporter_cluster_kubernetes_upgrade_phase{phase=~\"upgrading|reverting\"}) or on() clamp_max(omni_exporter_up == 1, 0)",
-          "refId": "B",
-          "legendFormat": "kubernetes"
+          "expr": "sum by (omni_instance) (omni_exporter_cluster_kubernetes_upgrade_phase{omni_instance=~\"$omni_instance\",phase=~\"upgrading|reverting\"}) or (clamp_max(max by (omni_instance) (omni_exporter_up{omni_instance=~\"$omni_instance\"}) == 1, 0))",
+          "legendFormat": "{{omni_instance}} kubernetes"
         }
       ],
       "fieldConfig": {
@@ -756,7 +790,7 @@
       "title": "Machines",
       "gridPos": {
         "x": 0,
-        "y": 29,
+        "y": 31,
         "w": 24,
         "h": 1
       },
@@ -769,32 +803,32 @@
       "title": "Machine Connectivity",
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "gridPos": {
         "x": 0,
-        "y": 30,
+        "y": 32,
         "w": 8,
         "h": 8
       },
       "targets": [
         {
+          "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "count(omni_exporter_machine_connected) or on() clamp_max(omni_exporter_up == 1, 0)",
-          "refId": "A",
-          "legendFormat": "total"
+          "expr": "count by (omni_instance) (omni_exporter_machine_connected{omni_instance=~\"$omni_instance\"}) or (clamp_max(max by (omni_instance) (omni_exporter_up{omni_instance=~\"$omni_instance\"}) == 1, 0))",
+          "legendFormat": "{{omni_instance}} total"
         },
         {
+          "refId": "B",
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "sum(omni_exporter_machine_connected) or on() clamp_max(omni_exporter_up == 1, 0)",
-          "refId": "B",
-          "legendFormat": "connected"
+          "expr": "sum by (omni_instance) (omni_exporter_machine_connected{omni_instance=~\"$omni_instance\"}) or (clamp_max(max by (omni_instance) (omni_exporter_up{omni_instance=~\"$omni_instance\"}) == 1, 0))",
+          "legendFormat": "{{omni_instance}} connected"
         }
       ],
       "fieldConfig": {
@@ -829,23 +863,23 @@
       "title": "Machine Power States",
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "gridPos": {
         "x": 8,
-        "y": 30,
+        "y": 32,
         "w": 8,
         "h": 8
       },
       "targets": [
         {
+          "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "sum by (state) (omni_exporter_machine_power_state)",
-          "refId": "A",
-          "legendFormat": "{{state}}"
+          "expr": "sum by (omni_instance, state) (omni_exporter_machine_power_state{omni_instance=~\"$omni_instance\"})",
+          "legendFormat": "{{omni_instance}} \u00b7 {{state}}"
         }
       ],
       "fieldConfig": {
@@ -880,23 +914,23 @@
       "title": "Machines by Talos Version",
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "gridPos": {
         "x": 16,
-        "y": 30,
+        "y": 32,
         "w": 8,
         "h": 8
       },
       "targets": [
         {
+          "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "count by (talos_version) (omni_exporter_machine_info)",
-          "refId": "A",
-          "legendFormat": "{{talos_version}}"
+          "expr": "count by (omni_instance, talos_version) (omni_exporter_machine_info{omni_instance=~\"$omni_instance\"})",
+          "legendFormat": "{{omni_instance}} \u00b7 {{talos_version}}"
         }
       ],
       "fieldConfig": {
@@ -931,11 +965,11 @@
       "title": "Machine Inventory",
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "gridPos": {
         "x": 0,
-        "y": 38,
+        "y": 40,
         "w": 24,
         "h": 8
       },
@@ -943,9 +977,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "omni_exporter_machine_info",
+          "expr": "omni_exporter_machine_info{omni_instance=~\"$omni_instance\"}",
           "refId": "A",
           "instant": true,
           "format": "table"
@@ -968,7 +1002,16 @@
               "Value": true,
               "__name__": true,
               "instance": true,
-              "job": true
+              "job": true,
+              "__temp_job__": true,
+              "arch": true,
+              "cluster": true,
+              "container": true,
+              "endpoint": true,
+              "endpoints": true,
+              "namespace": true,
+              "pod": true,
+              "service": true
             },
             "renameByName": {}
           }
@@ -981,7 +1024,7 @@
       "title": "Cluster Machines & Machine Sets",
       "gridPos": {
         "x": 0,
-        "y": 46,
+        "y": 48,
         "w": 24,
         "h": 1
       },
@@ -994,23 +1037,23 @@
       "title": "Cluster Machine Stages",
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "gridPos": {
         "x": 0,
-        "y": 47,
+        "y": 49,
         "w": 8,
         "h": 8
       },
       "targets": [
         {
+          "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "sum by (stage) (omni_exporter_cluster_machine_stage)",
-          "refId": "A",
-          "legendFormat": "{{stage}}"
+          "expr": "sum by (omni_instance, stage) (omni_exporter_cluster_machine_stage{omni_instance=~\"$omni_instance\"})",
+          "legendFormat": "{{omni_instance}} \u00b7 {{stage}}"
         }
       ],
       "fieldConfig": {
@@ -1041,72 +1084,54 @@
     },
     {
       "id": 22,
-      "type": "state-timeline",
-      "title": "Cluster Machine Ready",
+      "type": "timeseries",
+      "title": "Cluster Machines Not Ready",
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "gridPos": {
         "x": 8,
-        "y": 47,
+        "y": 49,
         "w": 8,
         "h": 8
       },
       "targets": [
         {
+          "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "omni_exporter_cluster_machine_ready",
-          "refId": "A",
-          "legendFormat": "{{machine_id}}"
+          "expr": "sum by (omni_instance, cluster_id) (1 - omni_exporter_cluster_machine_ready{omni_instance=~\"$omni_instance\"})",
+          "legendFormat": "{{omni_instance}} \u00b7 {{cluster_id}}"
         }
       ],
       "fieldConfig": {
         "defaults": {
           "custom": {
-            "lineWidth": 0,
-            "fillOpacity": 70,
-            "spanNulls": false,
-            "insertNulls": false
+            "drawStyle": "line",
+            "lineInterpolation": "stepAfter",
+            "fillOpacity": 20,
+            "showPoints": "never"
           },
-          "color": {
-            "mode": "fixed",
-            "fixedColor": "text"
-          },
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "Not ready",
-                  "color": "red",
-                  "index": 0
-                },
-                "1": {
-                  "text": "Ready",
-                  "color": "green",
-                  "index": 1
-                }
-              }
-            }
-          ],
-          "noValue": "-"
+          "min": 0
         },
         "overrides": []
       },
       "options": {
-        "showValue": "auto",
-        "rowHeight": 0.8,
         "legend": {
-          "showLegend": false
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "max"
+          ]
         },
         "tooltip": {
-          "mode": "single"
+          "mode": "multi"
         }
-      }
+      },
+      "description": "Number of cluster machines not ready, per cluster (0 = all ready)."
     },
     {
       "id": 23,
@@ -1114,23 +1139,23 @@
       "title": "Machine Set Phases",
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "gridPos": {
         "x": 16,
-        "y": 47,
+        "y": 49,
         "w": 8,
         "h": 8
       },
       "targets": [
         {
+          "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "sum by (phase) (omni_exporter_machine_set_phase)",
-          "refId": "A",
-          "legendFormat": "{{phase}}"
+          "expr": "sum by (omni_instance, phase) (omni_exporter_machine_set_phase{omni_instance=~\"$omni_instance\"})",
+          "legendFormat": "{{omni_instance}} \u00b7 {{phase}}"
         }
       ],
       "fieldConfig": {
@@ -1165,50 +1190,50 @@
       "title": "Machine Set Machines",
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "gridPos": {
         "x": 0,
-        "y": 55,
+        "y": 57,
         "w": 12,
         "h": 8
       },
       "targets": [
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "omni_exporter_machine_set_machines",
           "refId": "A",
-          "legendFormat": "{{machine_set_id}} total"
-        },
-        {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "omni_exporter_machine_set_machines_healthy",
+          "expr": "omni_exporter_machine_set_machines{omni_instance=~\"$omni_instance\"}",
+          "legendFormat": "{{omni_instance}} \u00b7 {{machine_set_id}} total"
+        },
+        {
           "refId": "B",
-          "legendFormat": "{{machine_set_id}} healthy"
-        },
-        {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "omni_exporter_machine_set_machines_connected",
+          "expr": "omni_exporter_machine_set_machines_healthy{omni_instance=~\"$omni_instance\"}",
+          "legendFormat": "{{omni_instance}} \u00b7 {{machine_set_id}} healthy"
+        },
+        {
           "refId": "C",
-          "legendFormat": "{{machine_set_id}} connected"
-        },
-        {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "omni_exporter_machine_set_machines_requested",
+          "expr": "omni_exporter_machine_set_machines_connected{omni_instance=~\"$omni_instance\"}",
+          "legendFormat": "{{omni_instance}} \u00b7 {{machine_set_id}} connected"
+        },
+        {
           "refId": "D",
-          "legendFormat": "{{machine_set_id}} requested"
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "omni_exporter_machine_set_machines_requested{omni_instance=~\"$omni_instance\"}",
+          "legendFormat": "{{omni_instance}} \u00b7 {{machine_set_id}} requested"
         }
       ],
       "fieldConfig": {
@@ -1239,72 +1264,54 @@
     },
     {
       "id": 25,
-      "type": "state-timeline",
-      "title": "Machine Set Ready",
+      "type": "timeseries",
+      "title": "Machine Sets Not Ready",
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "gridPos": {
         "x": 12,
-        "y": 55,
+        "y": 57,
         "w": 12,
         "h": 8
       },
       "targets": [
         {
+          "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "omni_exporter_machine_set_ready",
-          "refId": "A",
-          "legendFormat": "{{machine_set_id}}"
+          "expr": "sum by (omni_instance, cluster_id) (1 - omni_exporter_machine_set_ready{omni_instance=~\"$omni_instance\"})",
+          "legendFormat": "{{omni_instance}} \u00b7 {{cluster_id}}"
         }
       ],
       "fieldConfig": {
         "defaults": {
           "custom": {
-            "lineWidth": 0,
-            "fillOpacity": 70,
-            "spanNulls": false,
-            "insertNulls": false
+            "drawStyle": "line",
+            "lineInterpolation": "stepAfter",
+            "fillOpacity": 20,
+            "showPoints": "never"
           },
-          "color": {
-            "mode": "fixed",
-            "fixedColor": "text"
-          },
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "Not ready",
-                  "color": "red",
-                  "index": 0
-                },
-                "1": {
-                  "text": "Ready",
-                  "color": "green",
-                  "index": 1
-                }
-              }
-            }
-          ],
-          "noValue": "-"
+          "min": 0
         },
         "overrides": []
       },
       "options": {
-        "showValue": "auto",
-        "rowHeight": 0.8,
         "legend": {
-          "showLegend": false
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "max"
+          ]
         },
         "tooltip": {
-          "mode": "single"
+          "mode": "multi"
         }
-      }
+      },
+      "description": "Machine sets not ready, per cluster (0 = all ready)."
     },
     {
       "id": 26,
@@ -1312,7 +1319,7 @@
       "title": "Etcd Backups",
       "gridPos": {
         "x": 0,
-        "y": 63,
+        "y": 65,
         "w": 24,
         "h": 1
       },
@@ -1320,149 +1327,28 @@
       "panels": []
     },
     {
-      "id": 27,
-      "type": "stat",
-      "title": "Backups Enabled",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "x": 0,
-        "y": 64,
-        "w": 4,
-        "h": 4
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "sum(omni_exporter_cluster_etcd_backup_enabled) or on() clamp_max(omni_exporter_up == 1, 0)",
-          "refId": "A"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "textMode": "value",
-        "colorMode": "value",
-        "graphMode": "none"
-      }
-    },
-    {
-      "id": 28,
-      "type": "stat",
-      "title": "Backup Store Ready",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "x": 0,
-        "y": 68,
-        "w": 4,
-        "h": 4
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "omni_exporter_etcd_backup_store_ready",
-          "refId": "A"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          },
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "Error",
-                  "color": "red",
-                  "index": 0
-                },
-                "1": {
-                  "text": "Ready",
-                  "color": "green",
-                  "index": 1
-                }
-              }
-            }
-          ]
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "textMode": "value",
-        "colorMode": "value",
-        "graphMode": "none"
-      }
-    },
-    {
       "id": 29,
       "type": "timeseries",
       "title": "Backup Statuses",
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "gridPos": {
-        "x": 4,
-        "y": 64,
-        "w": 10,
+        "x": 0,
+        "y": 66,
+        "w": 12,
         "h": 8
       },
       "targets": [
         {
+          "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "sum by (status) (omni_exporter_cluster_etcd_backup_status)",
-          "refId": "A",
-          "legendFormat": "{{status}}"
+          "expr": "sum by (omni_instance, status) (omni_exporter_cluster_etcd_backup_status{omni_instance=~\"$omni_instance\"})",
+          "legendFormat": "{{omni_instance}} \u00b7 {{status}}"
         }
       ],
       "fieldConfig": {
@@ -1497,24 +1383,24 @@
       "title": "Time Since Last Backup",
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "gridPos": {
-        "x": 14,
-        "y": 64,
-        "w": 10,
+        "x": 12,
+        "y": 66,
+        "w": 12,
         "h": 8
       },
       "targets": [
         {
+          "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "time() - omni_exporter_cluster_etcd_backup_last_success_timestamp_seconds",
-          "legendFormat": "{{cluster_id}}",
-          "instant": true,
-          "refId": "A"
+          "expr": "time() - omni_exporter_cluster_etcd_backup_last_success_timestamp_seconds{omni_instance=~\"$omni_instance\"}",
+          "legendFormat": "{{omni_instance}} \u00b7 {{cluster_id}}",
+          "instant": true
         }
       ],
       "fieldConfig": {
@@ -1561,7 +1447,7 @@
       "title": "Exporter",
       "gridPos": {
         "x": 0,
-        "y": 72,
+        "y": 74,
         "w": 24,
         "h": 1
       },
@@ -1570,72 +1456,54 @@
     },
     {
       "id": 32,
-      "type": "state-timeline",
-      "title": "Collector Success",
+      "type": "timeseries",
+      "title": "Collector Failures",
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "gridPos": {
         "x": 0,
-        "y": 73,
+        "y": 75,
         "w": 12,
         "h": 8
       },
       "targets": [
         {
+          "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "omni_exporter_collector_success",
-          "refId": "A",
-          "legendFormat": "{{collector}}"
+          "expr": "sum by (omni_instance) (1 - omni_exporter_collector_success{omni_instance=~\"$omni_instance\"})",
+          "legendFormat": "{{omni_instance}}"
         }
       ],
       "fieldConfig": {
         "defaults": {
           "custom": {
-            "lineWidth": 0,
-            "fillOpacity": 70,
-            "spanNulls": false,
-            "insertNulls": false
+            "drawStyle": "line",
+            "lineInterpolation": "stepAfter",
+            "fillOpacity": 20,
+            "showPoints": "never"
           },
-          "color": {
-            "mode": "fixed",
-            "fixedColor": "text"
-          },
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "Failing",
-                  "color": "red",
-                  "index": 0
-                },
-                "1": {
-                  "text": "OK",
-                  "color": "green",
-                  "index": 1
-                }
-              }
-            }
-          ],
-          "noValue": "-"
+          "min": 0
         },
         "overrides": []
       },
       "options": {
-        "showValue": "auto",
-        "rowHeight": 0.8,
         "legend": {
-          "showLegend": false
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "max"
+          ]
         },
         "tooltip": {
-          "mode": "single"
+          "mode": "multi"
         }
-      }
+      },
+      "description": "Collectors not succeeding, per instance (0 = all healthy)."
     },
     {
       "id": 33,
@@ -1643,23 +1511,23 @@
       "title": "Watch Events",
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "gridPos": {
         "x": 12,
-        "y": 73,
+        "y": 75,
         "w": 12,
         "h": 8
       },
       "targets": [
         {
+          "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "sum by (collector, event) (rate(omni_exporter_collector_events_total[$__rate_interval]))",
-          "legendFormat": "{{collector}} {{event}}",
-          "refId": "A"
+          "expr": "sum by (omni_instance, collector, event) (rate(omni_exporter_collector_events_total{omni_instance=~\"$omni_instance\"}[$__rate_interval]))",
+          "legendFormat": "{{omni_instance}} \u00b7 {{collector}} {{event}}"
         }
       ],
       "fieldConfig": {
@@ -1689,81 +1557,28 @@
       }
     },
     {
-      "id": 34,
-      "type": "stat",
-      "title": "Version",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "x": 0,
-        "y": 81,
-        "w": 4,
-        "h": 4
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "omni_exporter_build_info",
-          "refId": "A",
-          "legendFormat": "{{version}}"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "textMode": "name",
-        "colorMode": "value",
-        "graphMode": "none"
-      }
-    },
-    {
       "id": 35,
       "type": "timeseries",
       "title": "Exporter Memory",
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "gridPos": {
-        "x": 4,
-        "y": 81,
-        "w": 5,
+        "x": 0,
+        "y": 83,
+        "w": 6,
         "h": 6
       },
       "targets": [
         {
+          "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "process_resident_memory_bytes{job='omni_exporter'} OR process_resident_memory_bytes",
-          "refId": "A",
-          "legendFormat": "resident memory"
+          "expr": "process_resident_memory_bytes{omni_instance=~\"$omni_instance\"}",
+          "legendFormat": "{{omni_instance}}"
         }
       ],
       "fieldConfig": {
@@ -1799,23 +1614,23 @@
       "title": "Exporter Goroutines",
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "gridPos": {
-        "x": 9,
-        "y": 81,
-        "w": 5,
+        "x": 6,
+        "y": 83,
+        "w": 6,
         "h": 6
       },
       "targets": [
         {
+          "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "go_goroutines{job='omni_exporter'} OR go_goroutines",
-          "refId": "A",
-          "legendFormat": "goroutines"
+          "expr": "go_goroutines{omni_instance=~\"$omni_instance\"}",
+          "legendFormat": "{{omni_instance}}"
         }
       ],
       "fieldConfig": {
@@ -1850,23 +1665,23 @@
       "title": "Cached Resources",
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "gridPos": {
-        "x": 14,
-        "y": 81,
-        "w": 5,
+        "x": 12,
+        "y": 83,
+        "w": 6,
         "h": 6
       },
       "targets": [
         {
+          "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "omni_exporter_collector_cached_resources",
-          "legendFormat": "{{collector}}",
-          "refId": "A"
+          "expr": "omni_exporter_collector_cached_resources{omni_instance=~\"$omni_instance\"}",
+          "legendFormat": "{{omni_instance}} \u00b7 {{collector}}"
         }
       ],
       "fieldConfig": {
@@ -1897,23 +1712,23 @@
       "title": "Watch Restarts",
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "gridPos": {
-        "x": 19,
-        "y": 81,
-        "w": 5,
+        "x": 18,
+        "y": 83,
+        "w": 6,
         "h": 6
       },
       "targets": [
         {
+          "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "omni_exporter_collector_watch_attempts_total - 1",
-          "legendFormat": "{{collector}}",
-          "refId": "A"
+          "expr": "omni_exporter_collector_watch_attempts_total{omni_instance=~\"$omni_instance\"} - 1",
+          "legendFormat": "{{omni_instance}} \u00b7 {{collector}}"
         }
       ],
       "fieldConfig": {
@@ -1937,79 +1752,42 @@
           "sort": "desc"
         }
       }
-    },
-    {
-      "id": 39,
-      "type": "stat",
-      "title": "Omni Reachable",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "x": 6,
-        "y": 1,
-        "w": 2,
-        "h": 4
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "omni_exporter_reachable",
-          "refId": "A"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          },
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "No",
-                  "color": "red",
-                  "index": 0
-                },
-                "1": {
-                  "text": "Yes",
-                  "color": "green",
-                  "index": 1
-                }
-              }
-            }
-          ]
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "textMode": "value",
-        "colorMode": "value",
-        "graphMode": "none"
-      }
     }
   ],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "name": "datasource",
+        "label": "Data source",
+        "type": "datasource",
+        "query": "prometheus",
+        "refresh": 1,
+        "current": {},
+        "hide": 0
+      },
+      {
+        "name": "omni_instance",
+        "label": "Omni instance",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "query": {
+          "query": "label_values(omni_exporter_up, omni_instance)",
+          "refId": "A"
+        },
+        "refresh": 2,
+        "sort": 1,
+        "includeAll": true,
+        "multi": true,
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        }
+      }
+    ]
   },
   "annotations": {
     "list": []

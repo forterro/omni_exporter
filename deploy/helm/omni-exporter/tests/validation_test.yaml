@@ -1,0 +1,24 @@
+suite: validation
+templates:
+  - templates/deployment.yaml
+tests:
+  - it: fails when omni.endpoint is missing
+    set:
+      omni.serviceAccountKey.value: dummy
+    asserts:
+      - failedTemplate:
+          errorMessage: "omni.endpoint is required (e.g. https://<account>.omni.siderolabs.io)"
+  - it: fails when no service account key is provided
+    set:
+      omni.endpoint: https://example.omni.siderolabs.io
+    asserts:
+      - failedTemplate:
+          errorMessage: "omni.serviceAccountKey: set either .existingSecret or .value"
+  - it: fails when webConfig is enabled without content or secret
+    set:
+      omni.endpoint: https://example.omni.siderolabs.io
+      omni.serviceAccountKey.value: dummy
+      webConfig.enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: "webConfig.enabled: set either webConfig.existingSecret or webConfig.content"

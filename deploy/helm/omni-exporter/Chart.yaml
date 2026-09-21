@@ -1,0 +1,29 @@
+apiVersion: v2
+name: omni-exporter
+description: |
+  Prometheus exporter for Sidero Omni — kube-state-metrics for Omni.
+  Deploys the siderolabs/omni_exporter binary and exposes per-cluster and
+  per-machine metrics on :10048. Standard-Kubernetes chart, no CRDs.
+type: application
+
+# version and appVersion are set by `make generate` (kres) at release time,
+# keeping the chart version in lockstep with the exporter version.
+version: 0.1.0
+appVersion: "v0.1.0"
+
+home: https://github.com/siderolabs/omni_exporter
+sources:
+  - https://github.com/siderolabs/omni_exporter
+
+maintainers:
+  - name: Sidero Labs
+    url: https://www.siderolabs.com
+    email: info@siderolabs.com
+
+keywords:
+  - prometheus
+  - exporter
+  - omni
+  - sidero
+  - talos
+  - metrics

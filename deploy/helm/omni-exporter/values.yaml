@@ -1,0 +1,170 @@
+# Default values for omni-exporter.
+# A Prometheus exporter for Sidero Omni. See:
+#   https://github.com/siderolabs/omni_exporter
+
+# Number of exporter replicas. Each replica keeps its own independent in-memory
+# view of Omni, so replicas > 1 add redundancy, not sharding or load spreading.
+replicaCount: 1
+
+image:
+  registry: ghcr.io
+  # Image path under the registry. The release workflow rewrites the org part
+  # to the publishing owner, so forks republish under their own namespace.
+  repository: siderolabs/omni_exporter
+  # Overrides the image tag. Defaults to the chart appVersion when empty.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# TCP port the exporter binary listens on inside the container.
+containerPort: 10048
+
+# --- Omni connection ---------------------------------------------------------
+omni:
+  # Omni API endpoint, e.g. https://<account>.omni.siderolabs.io (required).
+  endpoint: ""
+  # Identifies this exporter when several exporters (e.g. one per Omni tenant)
+  # feed a single Prometheus/Mimir. When set, the ServiceMonitor tags every
+  # scraped series with <serviceMonitor.instanceLabel>=<value>. Leave empty for
+  # a single exporter.
+  instance: ""
+  # Skip TLS verification against the Omni API. Leave false in production.
+  insecureSkipTLSVerify: false
+  # Reader-role service account key. Provide EITHER an existing secret
+  # (recommended for GitOps) OR an inline value (chart then creates the Secret).
+  serviceAccountKey:
+    # Name of an existing Secret holding the key.
+    existingSecret: ""
+    # Key inside that existing Secret.
+    existingSecretKey: OMNI_SERVICE_ACCOUNT_KEY
+    # Inline key value. Used only when existingSecret is empty.
+    value: ""
+
+# --- Exporter runtime --------------------------------------------------------
+exporter:
+  # Expose pprof under /debug/pprof/. Trusted networks only.
+  enablePprof: false
+  logLevel: info   # debug | info | warn | error
+  logFormat: json  # json | text
+  # Extra CLI flags appended verbatim to the exporter invocation.
+  extraArgs: []
+
+# Extra environment variables (list of core-v1 EnvVar).
+extraEnv: []
+
+service:
+  type: ClusterIP
+  port: 10048
+  # Service port name; referenced by the ServiceMonitor endpoint below.
+  portName: metrics
+  annotations: {}
+
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+  automountServiceAccountToken: false
+
+# Prometheus Operator ServiceMonitor (optional).
+serviceMonitor:
+  enabled: false
+  # Namespace for the ServiceMonitor; defaults to the release namespace.
+  namespace: ""
+  interval: 30s
+  scrapeTimeout: 10s
+  honorLabels: false
+  # Label name carrying omni.instance (multi-tenant discriminator).
+  instanceLabel: omni_instance
+  # Extra labels (e.g. to match your Prometheus serviceMonitorSelector).
+  labels: {}
+  annotations: {}
+  relabelings: []
+  metricRelabelings: []
+
+# Prometheus Operator PrometheusRule with a few sane alerts (optional).
+prometheusRule:
+  enabled: false
+  # Namespace for the PrometheusRule; defaults to the release namespace.
+  namespace: ""
+  labels: {}
+  forDown: 10m
+  forResync: 15m
+  forClusterNotReady: 15m
+
+# TLS / basic-auth on the metrics endpoint via the Prometheus exporter-toolkit
+# web config file (--web.config.file). See:
+#   https://github.com/prometheus/exporter-toolkit/blob/master/docs/web-configuration.md
+webConfig:
+  enabled: false
+  # Inline web-config.yml content. Used only when existingSecret is empty.
+  content: ""
+  # Reference an existing Secret with a 'web-config.yml' key instead.
+  existingSecret: ""
+
+resources:
+  requests:
+    cpu: 25m
+    memory: 64Mi
+  limits:
+    memory: 256Mi
+
+# Hardened by default: the image is scratch-based and the binary listens on a
+# high port, so it runs as an unprivileged, read-only-rootfs container.
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  fsGroup: 65532
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+# Probes are rendered verbatim; override entirely (e.g. switch to tcpSocket or
+# add scheme: HTTPS) when TLS or basic auth is enabled via webConfig.
+livenessProbe:
+  httpGet:
+    path: /metrics
+    port: metrics
+  initialDelaySeconds: 10
+  periodSeconds: 30
+  timeoutSeconds: 5
+readinessProbe:
+  httpGet:
+    path: /metrics
+    port: metrics
+  initialDelaySeconds: 5
+  periodSeconds: 15
+  timeoutSeconds: 5
+
+# Grafana dashboard shipped as a ConfigMap discovered by the Grafana sidecar
+# (label grafana_dashboard: "1"). No-op on clusters without that sidecar.
+dashboards:
+  enabled: false
+  # Namespace the Grafana sidecar watches; defaults to the release namespace.
+  namespace: ""
+  # Folder the sidecar files the dashboard under.
+  targetDirectory: /tmp/dashboards/Omni
+  labels: {}
+  annotations: {}
+
+podAnnotations: {}
+podLabels: {}
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+topologySpreadConstraints: []
+priorityClassName: ""
+
+# Extra volumes / mounts (e.g. a custom CA bundle).
+extraVolumes: []
+extraVolumeMounts: []
